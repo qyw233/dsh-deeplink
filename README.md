@@ -1,105 +1,105 @@
-# dsh-deeplink — WebUI 深链插件
+# dsh-deeplink — WebUI deep-link plugin
 
-DeepSeek Harness Web UI 插件：用链接参数直接打开**指定的项目对话**，不再永远跳回上一个会话。
+A DeepSeek Harness Web UI plugin that opens a **specific project conversation** directly from a URL query parameter, instead of always returning to the last session.
 
-- `?session=<会话id>` → 打开指定会话
-- `?workspace=<工程id>` → 打开指定工程的最新/空白会话
-- 持久链接：地址栏跟随当前会话，随时可复制/收藏/分享当前对话的链接
-- 内置一条模型提示词，让模型在回复涉及其他对话/工程时自动给出可点击的深链
+- `?session=<session-id>` → open that conversation
+- `?workspace=<workspace-id>` → open that project's latest/blank conversation
+- Persistent links: the address bar follows the current conversation, so you can copy/bookmark/share the link at any time
+- Ships a model prompt section so the model surfaces clickable deep links when a reply refers to another conversation or project
 
-许可证 MIT
+License: MIT
 
-## 实现能力
+## Features
 
-- 读取页面 URL 的 `?session=` / `?workspace=` 查询参数，等会话/工程列表基线就绪后切换目标
-- 会话与工程参数同时出现时，`session` 优先
-- 参数指向的会话/工程不存在（或已归档隐藏）时，静默回落到默认行为（恢复上次会话），不报错、不影响页面
-- 持久链接：当前会话变化（深链切换或页面内手动切换）时，用 `history.replaceState` 把地址栏改写为 `?session=<当前会话id>`；无会话时清空参数。不污染浏览器历史、不触发重载
-- node 半注册全局提示词 section，让模型知道深链存在，并在回复中引用其他对话/工程时附上链接
-- 纯浏览器端 + 轻量 node 半，不导入 cordis，无 peerDependencies
+- Reads `?session=` / `?workspace=` from the page URL and switches once the session/workspace list baseline is ready
+- `session` wins when both parameters are present
+- When the target session/workspace does not exist (or is archived/hidden), it silently falls back to the default behavior (restore the last session) — no errors, no impact on the page
+- Persistent links: whenever the current session changes (deep-link switch or a manual switch in the UI), the address bar is rewritten to `?session=<current-session-id>` via `history.replaceState`; when no session is current, the parameters are cleared. No history pollution, no reload
+- The node half registers a global prompt section so the model knows deep links exist and can attach links when a reply refers to other conversations/projects
+- Pure browser half + a lightweight node half; no cordis import, no peerDependencies
 
-## 安装
+## Install
 
-本插件通过标准的 `dsh plugin` 机制安装到 profile，**无需修改 DSH 源码**。
+The plugin is installed into a profile via the standard `dsh plugin` mechanism — **no DSH source changes required**.
 
 ```sh
-# 官方 profile（自带 dsh-base + dsh-web-app，插件需要的 systemPrompt/webServer 由它们提供）：
+# Official profile (ships dsh-base + dsh-web-app, which provide the systemPrompt/webServer services):
 dsh plugin --profile web add github:qyw233/dsh-deeplink
-# 或本地 checkout：
+# Or a local checkout:
 dsh plugin --profile web add /path/to/dsh-deeplink
 ```
 
-仓库包含构建产物（`lib/` 已提交），安装后无需另外构建。
+The repository ships its build output (`lib/` is committed), so no additional build step is required after install.
 
-安装后重启 Web UI 并刷新浏览器页面，插件会出现在浏览器引导图（`__DSH_BOOT__`）中。
+After installing, restart the Web UI and refresh the browser page. The plugin appears in the browser boot graph (`__DSH_BOOT__`).
 
-## 使用
+## Usage
 
-在 WebUI 地址后附加查询参数：
+Append query parameters to the WebUI URL:
 
-| 参数 | 含义 | 示例 |
+| Parameter | Meaning | Example |
 |---|---|---|
-| `?session=<会话id>` | 打开该会话（对话） | `http://127.0.0.1:3080/?session=session-304ae36e-1e66-453a-a946-2b0a9a2b173d` |
-| `?workspace=<工程id>` | 打开该工程的最新/空白会话 | `http://127.0.0.1:3080/?workspace=fc8b75ae-107c-4b6c-978c-276270b03b8b` |
+| `?session=<session-id>` | Open that conversation | `http://127.0.0.1:3080/?session=session-304ae36e-1e66-453a-a946-2b0a9a2b173d` |
+| `?workspace=<workspace-id>` | Open that project's latest/blank conversation | `http://127.0.0.1:3080/?workspace=fc8b75ae-107c-4b6c-978c-276270b03b8b` |
 
-新窗口/标签页行为：
+New window/tab behavior:
 
-- 从对话里点击深链：GUI 的 markdown 渲染器对 http(s) 链接统一加 `target="_blank"`，因此会开新标签页，插件在新标签页里切换到目标会话。
-- 直接在当前标签页地址栏粘贴 `?session=...` 并回车：本页切换。
+- Clicking a deep link inside a conversation: the GUI's markdown renderer adds `target="_blank"` to all http(s) links, so a new tab opens and the plugin switches THAT tab to the target conversation.
+- Pasting `?session=...` into the current tab's address bar and pressing Enter: the current page switches.
 
-持久链接：
+Persistent links:
 
-- 打开深链后，地址栏会自动更新为 `?session=<实际会话id>`（`workspace` 参数被消费、移除）。
-- 页面内手动切换会话时，地址栏同样跟随变化。
-- 切换到"无会话/新建"状态时，参数清空，地址栏回到 `/`。
-- 更新用 `history.replaceState`，不会在浏览器后退历史里留下每个会话。
+- After a deep link opens, the address bar updates to `?session=<actual-session-id>` (the `workspace` parameter is consumed and removed).
+- Manually switching conversations in the UI updates the address bar the same way.
+- Switching to the "no session / new" state clears the parameters and returns the address bar to `/`.
+- Updates use `history.replaceState`, so each conversation is not left in the browser back/forward history.
 
-## 模型提示词
+## Model prompt
 
-node 半注册一条全局提示词 section（`plugin:dsh-deeplink`，order −97，位于 web-surface 之后、persona 之前），告诉模型：
+The node half registers a global prompt section (`plugin:dsh-deeplink`, order −97, after web-surface and before persona) that tells the model:
 
-- 本 GUI 支持 `?session=` / `?workspace=` 深链（点击后在新标签页打开）；
-- 当回复涉及**其他对话/工程**（先前讨论、别的 workspace、另一会话的后续）时，可附上对应链接，让用户一键跳转；
-- 如何发现真实 id：读 `$DSH_HOME/storages/workspace.json`（`tables.workspaces` 的键是工程 id，每个记录的 `sessionIds` 是会话 id），或列 `$DSH_HOME/sessions/<工程>/` 目录（目录名即会话 id）；
-- 只输出真实存在的 id，禁止编造。
+- This GUI supports `?session=` / `?workspace=` deep links (a click opens them in a new tab);
+- When a reply refers to **another conversation or project** (an earlier discussion, a different workspace, a follow-up of another session), attach the corresponding link so the user can jump there in one click;
+- How to discover real ids: read `$DSH_HOME/storages/workspace.json` (the keys of `tables.workspaces` are workspace ids; each record's `sessionIds` lists its session ids), or list `$DSH_HOME/sessions/<project>/` directories (each directory name is a session id);
+- Only emit ids that actually exist; never invent one.
 
-## 如何找到 id
+## How to find ids
 
-- 会话 id：`~/.dsh/sessions/--工程名--/<session-id>/` 目录名；或 `~/.dsh/storages/workspace.json` 中 `tables.workspaces[].sessionIds`。
-- 工程 id：`~/.dsh/storages/workspace.json` 中 `tables.workspaces` 的键（UUID）。
+- Session id: the directory name under `~/.dsh/sessions/--<project>--/<session-id>/`; or `tables.workspaces[].sessionIds` in `~/.dsh/storages/workspace.json`.
+- Workspace id: the key (UUID) of `tables.workspaces` in `~/.dsh/storages/workspace.json`.
 
-## 开发 / Develop
+## Develop
 
-- 浏览器半 `lib/client.js`：改动会被运行中的服务器 HMR 自动感知（stat-poll，约 0.5s），刷新页面即生效。
-- node 半 `lib/index.js`：改动需**重启 `dsh web`** 生效。
-- 本插件无构建步骤；`lib/` 直接手写提交。
+- Browser half `lib/client.js`: changes are picked up by the running server's HMR (stat-poll, ~0.5s); refresh the page to see them.
+- Node half `lib/index.js`: changes require restarting `dsh web`.
+- This plugin has no build step; `lib/` is authored directly.
 
-## 版本兼容
+## Version compatibility
 
-浏览器半纯客户端：不导入 cordis、无 peerDependencies，只依赖 runtime 提供的 `sessions` / `workspaces` 服务及其 `list` 快照。node 半依赖 `systemPrompt` / `webServer` 服务（dsh-base 与 web 组合均已提供）。已适配 `httpServer` → `webServer` 服务名变更，并补 `dsh.bundle` 声明（`cordis.patch.yml`）以配合新版的 `dsh plugin` bundle 机制。
+The browser half is pure client: no cordis import, no peerDependencies, and depends only on the runtime-provided `sessions` / `workspaces` services and their `list` snapshots. The node half depends on the `systemPrompt` / `webServer` services (both provided by the dsh-base and web compositions). It has been adapted to the `httpServer` → `webServer` service rename and ships a `dsh.bundle` declaration (`cordis.patch.yml`) for the newer `dsh plugin` bundle mechanism.
 
-## 许可证 / License
+## License
 
 [MIT](./LICENSE) · Copyright (c) 2026 DSH Community Contributors
 
-## 更新记录 / Changelog
+## Changelog
 
-### 2026-08-13 · v0.4.0 — 持久链接 + 新版兼容
+### 2026-08-13 · v0.4.0 — Persistent links + newer-version compatibility
 
-- 地址栏跟随当前会话：深链切换或页面内手动切换后，用 `history.replaceState` 改写为 `?session=<当前会话id>`，无会话时清空参数；不污染历史、不重载。
-- 适配 `httpServer` → `webServer` 服务名变更。
-- 补 `dsh.bundle` 声明与 `cordis.patch.yml`，配合新版 `dsh plugin` 的 bundle 加载机制。
+- Address bar follows the current session: after a deep-link switch or a manual switch, the URL is rewritten to `?session=<current-session-id>` via `history.replaceState`; cleared when no session is current. No history pollution, no reload.
+- Adapted to the `httpServer` → `webServer` service rename.
+- Added the `dsh.bundle` declaration and `cordis.patch.yml` for the newer `dsh plugin` bundle mechanism.
 
-### 2026-08-12 · v0.3.0 — 撤销新窗口参数，统一新标签打开
+### 2026-08-12 · v0.3.0 — Dropped the new-window parameter, unified new-tab open
 
-- 撤销 `&new=1` 的 `window.open` 逻辑（渲染器已对 http 链接强制 `_blank`，`new` 会造成双窗口）。
-- 提示词与 README 同步：深链点击即新标签打开。
+- Reverted the `&new=1` `window.open` logic (the renderer already forces `_blank` on http links, so `new` would open two windows).
+- Prompt and README aligned: a deep-link click opens a new tab.
 
-### 2026-08-12 · v0.2.0 — 新窗口模式 + 模型提示词（已撤销）
+### 2026-08-12 · v0.2.0 — New-window mode + model prompt (reverted)
 
-- （撤销）`&new=1` 新窗口模式。
-- node 半注册 `plugin:dsh-deeplink` 提示词 section：让模型知道深链存在，回复涉及其他对话/工程时可附链接。
+- (Reverted) `&new=1` new-window mode.
+- Node half registers the `plugin:dsh-deeplink` prompt section so the model knows deep links exist and can attach links when referring to other conversations/projects.
 
-### 2026-08-12 · v0.1.0 — 初版
+### 2026-08-12 · v0.1.0 — Initial release
 
-- `?session=` / `?workspace=` 深链支持；未知目标静默回落；只读不写回。
+- `?session=` / `?workspace=` deep-link support; unknown targets fall back silently; read-only, never rewrites the URL.
