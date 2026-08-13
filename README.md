@@ -5,6 +5,7 @@ A DeepSeek Harness Web UI plugin that opens a **specific project conversation** 
 - `?session=<session-id>` → open that conversation
 - `?workspace=<workspace-id>` → open that project's latest/blank conversation
 - Persistent links: the address bar follows the current conversation, so you can copy/bookmark/share the link at any time
+- Settings toggles to enable/disable jumping and address-bar following independently
 - Ships a model prompt section so the model surfaces clickable deep links when a reply refers to another conversation or project
 
 License: MIT
@@ -15,6 +16,7 @@ License: MIT
 - `session` wins when both parameters are present
 - When the target session/workspace does not exist (or is archived/hidden), it silently falls back to the default behavior (restore the last session) — no errors, no impact on the page
 - Persistent links: whenever the current session changes (deep-link switch or a manual switch in the UI), the address bar is rewritten to `?session=<current-session-id>` via `history.replaceState`; when no session is current, the parameters are cleared. No history pollution, no reload
+- Settings toggles: two independent switches (Settings → 深链) — `jump` (process `?session=`/`?workspace=` on load, default on) and `follow` (address-bar following, default on), both persisted in `localStorage`
 - The node half registers a global prompt section so the model knows deep links exist and can attach links when a reply refers to other conversations/projects
 - Pure browser half + a lightweight node half; no cordis import, no peerDependencies
 
@@ -54,6 +56,15 @@ Persistent links:
 - Switching to the "no session / new" state clears the parameters and returns the address bar to `/`.
 - Updates use `history.replaceState`, so each conversation is not left in the browser back/forward history.
 
+## Settings
+
+The plugin registers a **深链** section in the Settings panel with two independent toggles (both default on, persisted in `localStorage`):
+
+| Toggle | Key | Effect |
+|---|---|---|
+| 跳转到指定对话 | `dsh-deeplink.jump` | Process `?session=` / `?workspace=` deep links on page load. Read once per load — toggle it before opening a deep link. |
+| 地址栏跟随 | `dsh-deeplink.follow` | Keep the address bar following the current session. Read on every sync, so toggling takes effect immediately. |
+
 ## Model prompt
 
 The node half registers a global prompt section (`plugin:dsh-deeplink`, order −97, after web-surface and before persona) that tells the model:
@@ -83,6 +94,10 @@ The browser half is pure client: no cordis import, no peerDependencies, and depe
 [MIT](./LICENSE) · Copyright (c) 2026 DSH Community Contributors
 
 ## Changelog
+
+### 2026-08-13 · v0.5.0 — Settings toggles
+
+- Added a **深链** section in Settings with two independent toggles: `jump` (deep-link jump, default on) and `follow` (address-bar following, default on), both persisted in `localStorage`.
 
 ### 2026-08-13 · v0.4.0 — Persistent links + newer-version compatibility
 
