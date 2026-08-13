@@ -4,31 +4,27 @@ DeepSeek Harness Web UI 插件：用链接参数直接打开**指定的项目对
 
 - `?session=<会话id>` → 打开指定会话
 - `?workspace=<工程id>` → 打开指定工程的最新/空白会话
+- 持久链接：地址栏跟随当前会话，随时可复制/收藏/分享当前对话的链接
 - 内置一条模型提示词，让模型在回复涉及其他对话/工程时自动给出可点击的深链
 
-发布于 [dsh-external](https://github.com/dsh-external) 组织 · 许可证 MIT
-
-> 本组织为 DSH 内测社区仓库，官方不保证公开发布后该组织仍然存在，请自行保留副本。
+许可证 MIT
 
 ## 实现能力
 
 - 读取页面 URL 的 `?session=` / `?workspace=` 查询参数，等会话/工程列表基线就绪后切换目标
 - 会话与工程参数同时出现时，`session` 优先
 - 参数指向的会话/工程不存在（或已归档隐藏）时，静默回落到默认行为（恢复上次会话），不报错、不影响页面
-- 插件只读取链接、不改写地址栏；页面内手动切换会话不改变 URL
+- 持久链接：当前会话变化（深链切换或页面内手动切换）时，用 `history.replaceState` 把地址栏改写为 `?session=<当前会话id>`；无会话时清空参数。不污染浏览器历史、不触发重载
 - node 半注册全局提示词 section，让模型知道深链存在，并在回复中引用其他对话/工程时附上链接
 - 纯浏览器端 + 轻量 node 半，不导入 cordis，无 peerDependencies
 
 ## 安装
 
-> [!WARNING]
-> 本插件目前与最新版 DeepSeek Harness 存在兼容问题。建议把本仓库链接直接交给 DeepSeek Harness，让它根据你正在使用的版本修改插件并完成安装；不要直接使用下面的标准安装命令。
-
 本插件通过标准的 `dsh plugin` 机制安装到 profile，**无需修改 DSH 源码**。
 
 ```sh
-# 官方 profile（自带 dsh-base + dsh-web-app，插件需要的 systemPrompt/httpServer 由它们提供）：
-dsh plugin --profile web add github:dsh-external/dsh-deeplink
+# 官方 profile（自带 dsh-base + dsh-web-app，插件需要的 systemPrompt/webServer 由它们提供）：
+dsh plugin --profile web add github:qyw233/dsh-deeplink
 # 或本地 checkout：
 dsh plugin --profile web add /path/to/dsh-deeplink
 ```
@@ -50,6 +46,13 @@ dsh plugin --profile web add /path/to/dsh-deeplink
 
 - 从对话里点击深链：GUI 的 markdown 渲染器对 http(s) 链接统一加 `target="_blank"`，因此会开新标签页，插件在新标签页里切换到目标会话。
 - 直接在当前标签页地址栏粘贴 `?session=...` 并回车：本页切换。
+
+持久链接：
+
+- 打开深链后，地址栏会自动更新为 `?session=<实际会话id>`（`workspace` 参数被消费、移除）。
+- 页面内手动切换会话时，地址栏同样跟随变化。
+- 切换到"无会话/新建"状态时，参数清空，地址栏回到 `/`。
+- 更新用 `history.replaceState`，不会在浏览器后退历史里留下每个会话。
 
 ## 模型提示词
 
@@ -73,13 +76,19 @@ node 半注册一条全局提示词 section（`plugin:dsh-deeplink`，order −9
 
 ## 版本兼容
 
-本插件基于 snapshot0811+ / npm `0.0.1-rc.*` 开发。DeepSeek Harness 最新版已经出现不兼容变更，直接安装可能无法工作；请让 DeepSeek Harness 根据当前版本修改并安装本插件。
+浏览器半纯客户端：不导入 cordis、无 peerDependencies，只依赖 runtime 提供的 `sessions` / `workspaces` 服务及其 `list` 快照。node 半依赖 `systemPrompt` / `webServer` 服务（dsh-base 与 web 组合均已提供）。已适配 `httpServer` → `webServer` 服务名变更，并补 `dsh.bundle` 声明（`cordis.patch.yml`）以配合新版的 `dsh plugin` bundle 机制。
 
 ## 许可证 / License
 
 [MIT](./LICENSE) · Copyright (c) 2026 DSH Community Contributors
 
 ## 更新记录 / Changelog
+
+### 2026-08-13 · v0.4.0 — 持久链接 + 新版兼容
+
+- 地址栏跟随当前会话：深链切换或页面内手动切换后，用 `history.replaceState` 改写为 `?session=<当前会话id>`，无会话时清空参数；不污染历史、不重载。
+- 适配 `httpServer` → `webServer` 服务名变更。
+- 补 `dsh.bundle` 声明与 `cordis.patch.yml`，配合新版 `dsh plugin` 的 bundle 加载机制。
 
 ### 2026-08-12 · v0.3.0 — 撤销新窗口参数，统一新标签打开
 

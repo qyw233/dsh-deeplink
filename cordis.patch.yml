@@ -1,0 +1,10 @@
+# dsh-deeplink bundle patch: mount the deep-link plugin.
+#
+# Applied when this bundle appears in a profile's dsh.profile.bundles list.
+# The host half (package root) registers the model-visible prompt section;
+# the browser half (dsh.client) is discovered automatically through the
+# package's dsh.client declaration + exports["./client"].
+
+- insert:
+    - id: dsh-deeplink
+      name: '@dsh-community/dsh-deeplink'

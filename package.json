@@ -1,6 +1,6 @@
 {
   "name": "@dsh-community/dsh-deeplink",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "DSH WebUI 深链：用 ?session=<会话id> 或 ?workspace=<工程id> 直接打开指定项目对话",
   "type": "module",
   "main": "lib/index.js",
@@ -10,6 +10,9 @@
     "./package.json": "./package.json"
   },
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime"
@@ -20,7 +23,8 @@
   "files": [
     "lib",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "cordis.patch.yml"
   ],
   "license": "MIT"
 }
