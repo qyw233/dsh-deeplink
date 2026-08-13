@@ -21,6 +21,9 @@ DeepSeek Harness Web UI 插件：用链接参数直接打开**指定的项目对
 
 ## 安装
 
+> [!WARNING]
+> 本插件目前与最新版 DeepSeek Harness 存在兼容问题。建议把本仓库链接直接交给 DeepSeek Harness，让它根据你正在使用的版本修改插件并完成安装；不要直接使用下面的标准安装命令。
+
 本插件通过标准的 `dsh plugin` 机制安装到 profile，**无需修改 DSH 源码**。
 
 ```sh
@@ -70,7 +73,7 @@ node 半注册一条全局提示词 section（`plugin:dsh-deeplink`，order −9
 
 ## 版本兼容
 
-浏览器半纯客户端：不导入 cordis、无 peerDependencies，只依赖 runtime 提供的 `sessions` / `workspaces` 服务及其 `list` 快照。node 半依赖 `systemPrompt` / `httpServer` 服务（dsh-base 与 web 组合均已提供）。与 snapshot0811+ / npm `0.0.1-rc.*` 兼容。
+本插件基于 snapshot0811+ / npm `0.0.1-rc.*` 开发。DeepSeek Harness 最新版已经出现不兼容变更，直接安装可能无法工作；请让 DeepSeek Harness 根据当前版本修改并安装本插件。
 
 ## 许可证 / License
 
