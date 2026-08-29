@@ -16,7 +16,7 @@ License: MIT
 - `session` wins when both parameters are present
 - When the target session/workspace does not exist (or is archived/hidden), it silently falls back to the default behavior (restore the last session) — no errors, no impact on the page
 - Persistent links: whenever the current session changes (deep-link switch or a manual switch in the UI), the address bar is rewritten to `?session=<current-session-id>` via `history.replaceState`; when no session is current, the parameters are cleared. No history pollution, no reload
-- Settings toggles: two independent switches (Settings → 深链) — `jump` (process `?session=`/`?workspace=` on load, default on) and `follow` (address-bar following, default on), both persisted in `localStorage`
+- Settings toggles: two independent switches (设置 → 插件 → 插件配置, shown as a card via the official `settings.plugin.item` slot, keyed by the `dsh-deeplink` settings namespace) — `jump` (process `?session=`/`?workspace=` on load, default on) and `follow` (address-bar following, default on), both persisted in `localStorage`
 - The node half registers a global prompt section so the model knows deep links exist and can attach links when a reply refers to other conversations/projects
 - Pure browser half + a lightweight node half; no cordis import, no peerDependencies
 
@@ -58,7 +58,7 @@ Persistent links:
 
 ## Settings
 
-The plugin registers a **深链** section in the Settings panel with two independent toggles (both default on, persisted in `localStorage`):
+The plugin registers a **深链** card in the 插件配置 tab (设置 → 插件 → 插件配置, via the official `settings.plugin.item` slot, keyed by the `dsh-deeplink` settings namespace registered on the host) with two independent toggles (both default on, persisted in `localStorage`):
 
 | Toggle | Key | Effect |
 |---|---|---|
@@ -94,6 +94,12 @@ The browser half is pure client: no cordis import, no peerDependencies, and depe
 [MIT](./LICENSE) · Copyright (c) 2026 DSH Community Contributors
 
 ## Changelog
+
+### 2026-08-29 · v0.6.0 — Settings move to a configurable-plugin card
+
+- The 深链 settings (two toggles) now appear in **设置 → 插件 → 插件配置** as a **collapsible card**, next to 终端 / Agent 循环 / 网页搜索, rendered through the official `settings.plugin.item` slot and keyed by the `dsh-deeplink` settings namespace (same structure and `YyYd_a_*` classes as the built-in PluginCard).
+- The node half registers the namespace via `installSettingsSection` with a schemastery schema; card toggles still persist in `localStorage`.
+- Dependency links (`schemastery`, `dsh-settings`) are git-ignored — install via `dsh plugin --profile web add github:qyw233/dsh-deeplink` which links them at runtime.
 
 ### 2026-08-13 · v0.5.0 — Settings toggles
 
