@@ -87,13 +87,18 @@ The node half registers a global prompt section (`plugin:dsh-deeplink`, order �
 
 ## Version compatibility
 
-The browser half is pure client: no cordis import, no peerDependencies, and depends only on the runtime-provided `sessions` / `workspaces` services and their `list` snapshots. The node half depends on the `systemPrompt` / `webServer` services (both provided by the dsh-base and web compositions). It has been adapted to the `httpServer` → `webServer` service rename and ships a `dsh.bundle` declaration (`cordis.patch.yml`) for the newer `dsh plugin` bundle mechanism.
+The browser half is pure client: no cordis import, no peerDependencies, and depends only on the runtime-provided `sessions` / `workspaces` services and their `list` snapshots. The node half depends on the `systemPrompt` / `webServer` services (both provided by the dsh-base and web compositions), and registers its optional settings namespace through the stable `ctx.settings.register()` API. It has been adapted to the `httpServer` → `webServer` service rename and ships a `dsh.bundle` declaration (`cordis.patch.yml`) for the newer `dsh plugin` bundle mechanism.
 
 ## License
 
 [MIT](./LICENSE) · Copyright (c) 2026 DSH Community Contributors
 
 ## Changelog
+
+### 2026-09-13 · v0.6.1 — Current DSH settings compatibility
+
+- Replaced the removed `settingsNamespace` / `installSettingsSection` named imports with direct optional-service registration through `ctx.settings.register()`.
+- Restored startup compatibility with current DSH releases while preserving the configurable-plugin card and browser-local toggle behavior.
 
 ### 2026-08-29 · v0.6.0 — Settings move to a configurable-plugin card
 
